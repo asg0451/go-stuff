@@ -1,4 +1,4 @@
-module github.com/asg0451/go-stuff
+module go.coldcutz.net/go-stuff
 
 go 1.21.3
 
