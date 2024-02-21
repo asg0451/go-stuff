@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
+	"go.coldcutz.net/go-stuff/logging"
 	"google.golang.org/grpc"
 )
 
@@ -45,4 +48,17 @@ func MakeLoggingInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 		}
 		return resp, err
 	}
+}
+
+// StdSetup is a helper function to setup a logger and context that cancels on ctrl-c or sigterm and has the logger in it
+func StdSetup() (ctx context.Context, done context.CancelFunc, log *slog.Logger, err error) {
+	if err := DotEnv(); err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to read .env: %w", err)
+	}
+	log = logging.New()
+	ctx = logging.NewContext(context.Background(), log)
+	ctx, done = signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer done()
+
+	return ctx, done, log, nil
 }
