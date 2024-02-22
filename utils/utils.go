@@ -60,7 +60,5 @@ func StdSetup() (ctx context.Context, done context.CancelFunc, log *slog.Logger,
 	slog.SetLogLoggerLevel(slog.LevelInfo)
 	ctx = logging.NewContext(context.Background(), log)
 	ctx, done = signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
-	defer done()
-
 	return ctx, done, log, nil
 }
