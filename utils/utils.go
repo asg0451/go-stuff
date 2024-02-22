@@ -56,6 +56,8 @@ func StdSetup() (ctx context.Context, done context.CancelFunc, log *slog.Logger,
 		return nil, nil, nil, fmt.Errorf("failed to read .env: %w", err)
 	}
 	log = logging.New()
+	slog.SetDefault(log)
+	slog.SetLogLoggerLevel(slog.LevelInfo)
 	ctx = logging.NewContext(context.Background(), log)
 	ctx, done = signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer done()
