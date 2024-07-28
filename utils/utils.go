@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jessevdk/go-flags"
 	"go.coldcutz.net/go-stuff/logging"
 	"google.golang.org/grpc"
 )
@@ -51,14 +52,19 @@ func MakeLoggingInterceptor(log *slog.Logger) grpc.UnaryServerInterceptor {
 }
 
 // StdSetup is a helper function to setup a logger and context that cancels on ctrl-c or sigterm and has the logger in it
-func StdSetup() (ctx context.Context, done context.CancelFunc, log *slog.Logger, err error) {
+func StdSetup[Opts any]() (ctx context.Context, done context.CancelFunc, log *slog.Logger, opts Opts, err error) {
 	if err := DotEnv(); err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to read .env: %w", err)
+		return nil, nil, nil, opts, fmt.Errorf("failed to read .env: %w", err)
 	}
+
+	if _, err := flags.Parse(&opts); err != nil {
+		return nil, nil, nil, opts, fmt.Errorf("failed to parse flags: %w", err)
+	}
+
 	log = logging.New()
 	slog.SetDefault(log)
 	slog.SetLogLoggerLevel(slog.LevelInfo)
 	ctx = logging.NewContext(context.Background(), log)
 	ctx, done = signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
-	return ctx, done, log, nil
+	return ctx, done, log, opts, nil
 }
